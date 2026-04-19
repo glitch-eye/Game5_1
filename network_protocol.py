@@ -138,6 +138,7 @@ class PlayerStateData:
             'time_stop_wave_reverse': getattr(player, 'time_stop_wave_reverse', False),
             'frame_index': getattr(player, 'frame_index', 0),
             'dead': player._dead,
+            'player_no': getattr(player, 'player_no', 1),
         }
     
     @staticmethod
@@ -165,6 +166,8 @@ class PlayerStateData:
             player.time_stop_startup = data.get('time_stop_startup', player.time_stop_startup)
         if hasattr(player, 'time_stop_ending'):
             player.time_stop_ending = data.get('time_stop_ending', player.time_stop_ending)
+        if hasattr(player, 'player_no'):
+            player.player_no = data.get('player_no', player.player_no)
 
 
 class EnemyStateData:

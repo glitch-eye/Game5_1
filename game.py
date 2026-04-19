@@ -106,7 +106,17 @@ class Game:
         self.loader.load_animation("pause_screen", "assets/sprite/title_back")
         self.loader.load_animation("status_font", "assets/sprite/status_font")
 
-        # player
+        # player effect (shared)
+        self.loader.load_animation("arrow_ring_sprite", "assets/sprite/arrow_ring_sprite")
+        self.loader.load_animation("player_jump_effect", "assets/sprite/player_jump_effect")
+        self.loader.load_animation("bullet_effect_sprite2", "assets/sprite/bullet_effect_sprite2")
+        self.loader.load_animation("bullet_effect_sprite3", "assets/sprite/bullet_effect_sprite3")
+        self.loader.load_animation("flying_knife", "assets/sprite/bullet_sprite3")
+
+        self.loader.load_animation("player_damage", "assets/sprite/player_damage")
+        self.loader.load_animation("player_fall_down", "assets/sprite/player_fall_down")
+
+        # player 1
         self.loader.load_animation("player_idle", "assets/sprite/player_stop")
         self.loader.load_animation("player_jump", "assets/sprite/player_jump")
         self.loader.load_animation("player_fall", "assets/sprite/player_falling")
@@ -117,10 +127,6 @@ class Game:
         self.loader.load_animation("player_run_stop", "assets/sprite/player_run_stop")
         self.loader.load_animation("player_run_back", "assets/sprite/player_run_back")
         self.loader.load_animation("player_down", "assets/sprite/player_down")
-        self.loader.load_animation("arrow_ring_sprite", "assets/sprite/arrow_ring_sprite")
-        self.loader.load_animation("player_jump_effect", "assets/sprite/player_jump_effect")
-        self.loader.load_animation("bullet_effect_sprite2", "assets/sprite/bullet_effect_sprite2")
-        self.loader.load_animation("bullet_effect_sprite3", "assets/sprite/bullet_effect_sprite3")
         self.loader.load_animation("player_action1", "assets/sprite/player_action")
         self.loader.load_animation("player_action2", "assets/sprite/player_action2")
         self.loader.load_animation("player_action3", "assets/sprite/player_action3")
@@ -138,10 +144,36 @@ class Game:
         self.loader.load_animation("player_sliding","assets/sprite/player_sliding")
         self.loader.load_animation("player_time_stop", "assets/sprite/player_time_stop")
         self.loader.load_animation("player_time_stop_air", "assets/sprite/player_time_stop_air")
-        self.loader.load_animation("flying_knife", "assets/sprite/bullet_sprite3")
-        self.loader.load_animation("player_damage", "assets/sprite/player_damage")
-        self.loader.load_animation("player_fall_down", "assets/sprite/player_fall_down")
         self.loader.load_animation("player_des", "assets/sprite/player_des")
+        # player 2
+        self.loader.load_animation("player_idle_2", "assets/sprite/player_stop_2")
+        self.loader.load_animation("player_jump_2", "assets/sprite/player_jump_2")
+        self.loader.load_animation("player_fall_2", "assets/sprite/player_falling_2")
+        self.loader.load_animation("player_2ndjump_2", "assets/sprite/player_2ndjump_2")
+        self.loader.load_animation("player_gliding_2", "assets/sprite/player_gliding_2")
+        self.loader.load_animation("player_run_2", "assets/sprite/player_run_2")
+        self.loader.load_animation("player_run_start_2", "assets/sprite/player_run_start_2")
+        self.loader.load_animation("player_run_stop_2", "assets/sprite/player_run_stop_2")
+        self.loader.load_animation("player_run_back_2", "assets/sprite/player_run_back_2")
+        self.loader.load_animation("player_down_2", "assets/sprite/player_down_2")
+        self.loader.load_animation("player_action1_2", "assets/sprite/player_action_2")
+        self.loader.load_animation("player_action2_2", "assets/sprite/player_action2_2")
+        self.loader.load_animation("player_action3_2", "assets/sprite/player_action3_2")
+        self.loader.load_animation("player_action4_2", "assets/sprite/player_action4_2")
+        self.loader.load_animation("player_run_attack1_2", "assets/sprite/player_run_attack2_2")
+        self.loader.load_animation("player_run_attack2_2", "assets/sprite/player_run_attack_2")
+        self.loader.load_animation("player_run_attack3_2", "assets/sprite/player_run_attack3_2")
+        self.loader.load_animation("player_run_attack4_2", "assets/sprite/player_run_attack4_2")
+        self.loader.load_animation("player_jump_attack_2", "assets/sprite/player_jump_attack_2")
+        self.loader.load_animation("player_up_shot_2","assets/sprite/player_up_shot_2")
+        self.loader.load_animation("player_up_shot2_2","assets/sprite/player_up_shot2_2")
+        self.loader.load_animation("player_up_shot_run_2","assets/sprite/player_up_shot_run_2")
+        self.loader.load_animation("player_up_shot_air_2","assets/sprite/player_up_shot_air_2")
+        self.loader.load_animation("player_under_attack_2","assets/sprite/player_under_attack_2")
+        self.loader.load_animation("player_sliding_2","assets/sprite/player_sliding_2")
+        self.loader.load_animation("player_time_stop_2", "assets/sprite/player_time_stop_2")
+        self.loader.load_animation("player_time_stop_air_2", "assets/sprite/player_time_stop_air_2")
+        self.loader.load_animation("player_des_2", "assets/sprite/player_des_2")
         # item and effect
         self.loader.load_animation("crystal", "assets/sprite/crystal_sprite")
         self.loader.load_animation("bomb_effect", "assets/sprite/bomb_effect")
@@ -234,26 +266,58 @@ class Game:
 
         self.crystal = list(self.executor.map(lambda x: Crystal(self.loader, x), CRYSTAL_POS))
 
-        # create entities AFTER assets exist
-        self.player = Character(self.loader, self)
+        # prepare remote render templates for player sprites
+        self.remote_player_templates = {
+            1: Character(self.loader, self, 1),
+            2: Character(self.loader, self, 2),
+        }
 
-        # Send initial player state once so server knows our spawn position
-        if self.enable_multiplayer and self.net_manager and self.net_manager.connected:
-            self.net_manager.send_player_state(self.player)
+        # prepare remote render templates for player sprites
+        self.remote_player_templates = {
+            1: Character(self.loader, self, 1),
+            2: Character(self.loader, self, 2),
+        }
 
-        # spawn boss
-        self.boss = Boss(self.loader, self, self.player)
-
-        # spawn fire gate
-        self.fire_gate = FireGate((3347.0, 470.0), self.loader)
-        self.magatamas = [Magatama((2850, 680), self.loader)]
+        # initialize entity placeholders; actual player/boss creation happens once the game starts
+        self.player = None
+        self.boss = None
+        self.fire_gate = None
+        self.magatamas = []
 
         self.BG = build_background()
         self.INDEX_MAP = load_map_from_excel()
         self.collision_map = Map()
         self.map_tiles, self.collision_tiles = self.collision_map.build_map()
-        self.player.set_map(self.collision_map)
         self.collision_map.build_collision(self.INDEX_MAP, self.collision_tiles)
+        self._last_sent_map_state = self._get_local_map_state()
+        self._create_local_entities()
+
+    def _create_local_entities(self, desired_player_no=None, force_recreate=False):
+        """Create or update the local player and dependent entities."""
+        if self.player is not None and not force_recreate:
+            if desired_player_no is None or getattr(self.player, 'player_no', 1) == desired_player_no:
+                return
+
+        player_no = 1
+        if desired_player_no is not None:
+            player_no = desired_player_no
+        elif self.enable_multiplayer and self.net_manager and self.net_manager.connected:
+            import time
+            start_time = time.time()
+            while self.net_manager.world_owner_id is None and time.time() - start_time < 1.0:
+                self.net_manager.update(0)
+                time.sleep(0.01)
+
+            player_no = 1 if self.net_manager.is_world_authority() else 2
+
+        self.player = Character(self.loader, self, player_no)
+        self.player.player_no = player_no
+        self.player.set_map(self.collision_map)
+
+        self.boss = Boss(self.loader, self, self.player)
+        self.fire_gate = FireGate((3347.0, 470.0), self.loader)
+        self.magatamas = [Magatama((2850, 680), self.loader)]
+
         self._assign_world_ids()
         self._last_sent_map_state = self._get_local_map_state()
 
@@ -269,6 +333,7 @@ class Game:
                 if option:
                     self.enable_multiplayer = self.menu.multi_mode
                     self._init_network()
+                    self._create_local_entities(force_recreate=True)
                     self.in_menu = False
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -749,8 +814,10 @@ class Game:
         self._last_local_knife_ids = current_ids
 
     def _draw_remote_player_sprite(self, screen, player_data):
+        player_no = int(player_data.get('player_no', 1)) if player_data.get('player_no') is not None else 1
+        template = self.remote_player_templates.get(player_no, self.remote_player_templates[1])
         current_anim = player_data.get('current_anim', player_data.get('animation_state', 'idle'))
-        frames = self.player.animations.get(current_anim) or self.player.animations.get("idle")
+        frames = template.animations.get(current_anim) or template.animations.get("idle")
         if not frames:
             return
 
@@ -767,7 +834,7 @@ class Game:
         if current_anim in ("up_shot", "up_shot2", "up_shot_air", "up_shot_run"):
             draw_pos = (draw_pos[0], draw_pos[1] - 32)
 
-        offset = self.player.anim_offsets.get(current_anim, (0, 0))
+        offset = template.anim_offsets.get(current_anim, (0, 0))
         if isinstance(offset, dict):
             offset_x, offset_y = offset["right"] if facing_right else offset["left"]
         else:
@@ -870,6 +937,9 @@ class Game:
         return self.enable_multiplayer and self.net_manager and not self._is_world_authority()
 
     def _sync_global_time_stop_from_network(self):
+        if self.player is None:
+            return
+
         if not self.enable_multiplayer or not self.net_manager:
             self.shared_time_stop_active = self.player.time_stop or self.player.time_stop_startup or self.player.time_stop_ending
             self.shared_time_stop_energy = self.player.time_energy
