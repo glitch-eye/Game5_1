@@ -326,9 +326,15 @@ class Game:
             if not self.time_stop:
                 if self.boss_spawned:
                     self.boss.update(dt, self.player._pos, self.knives)
-                list(self.executor.map(lambda x: x.update(dt, self.player, self.knives), self.wisp))
-                list(self.executor.map(lambda x: x.update(dt, self.player, self.knives), self.goblin))
-                list(self.executor.map(lambda x: x.update(dt, self.player, self.knives), self.crystal))
+                if self.enable_multiplayer:
+                    remote_players = self.net_manager.get_remote_players()
+                    list(self.executor.map(lambda x: x.update(dt, self.player, self.knives, remote_players), self.wisp))
+                    list(self.executor.map(lambda x: x.update(dt, self.player, self.knives, remote_players), self.goblin))
+                    list(self.executor.map(lambda x: x.update(dt, self.player, self.knives, remote_players), self.crystal))
+                else:
+                    list(self.executor.map(lambda x: x.update(dt, self.player, self.knives), self.wisp))
+                    list(self.executor.map(lambda x: x.update(dt, self.player, self.knives), self.goblin))
+                    list(self.executor.map(lambda x: x.update(dt, self.player, self.knives), self.crystal))
 
                 for m in self.magatamas:
                     m.update(dt, self.player)
@@ -1023,8 +1029,9 @@ class Game:
             if self.knives:
                 goblin.is_hit(self.knives)
             goblin.update_hurtbox()
-            if getattr(goblin, "_attack", False):
-                goblin.did_hit(self.player)
+            if goblin._attack:
+                if goblin.did_hit(self.player):
+                    self.player.apply_damage(GOB_DAMAGE, goblin._pos.x)
 
         if self.boss and self.boss.visible and not self.boss._dead and not self.boss._dying:
             if self.knives:

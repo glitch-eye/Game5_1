@@ -62,55 +62,75 @@ class Wisp:
     # UPDATE
     # -----------------------
 
-    def update(self, dt, player, knives):
+    def update(self, dt, player, knives, remote_players = None):
         
-        if self._alive:
-            if self.is_hit(knives):
-                self._frames = self._ded_frames
-                self._frame_index = 0
+        if not self._alive:
+            # Logic xử lý hoạt ảnh khi đã chết (giữ nguyên)
+            self._anim_timer += dt
+            if self._anim_timer > 1 / self._anim_speed:
                 self._anim_timer = 0
-                self._image = self._frames[0]
-                self._alive = False
+                self._frame_index += 1
+                if self._frame_index >= len(self._frames):
+                    self._died = True
+                else:
+                    self._image = self._frames[self._frame_index]
+            return
 
-        if self._alive:
-            # direction to player
-            direction = pygame.Vector2(player._pos) - self._pos + (16,32)
-            distance = direction.length()
+        # 1. Kiểm tra xem quái có bị trúng dao không
+        if self.is_hit(knives):
+            self._frames = self._ded_frames
+            self._frame_index = 0
+            self._anim_timer = 0
+            self._image = self._frames[0]
+            self._alive = False
+            return
 
-            if distance > 0:
-                direction = direction.normalize()
+        # 2. XÁC ĐỊNH MỤC TIÊU GẦN NHẤT
+        # Bắt đầu với người chơi chính (Local Player)
+        target_pos = pygame.Vector2(player._pos)
+        min_dist = (target_pos - self._pos).length()
 
-            if distance > self._radius:
-                # out of range
-                return
+        # Kiểm tra danh sách remote_players để tìm ai gần hơn
+        if remote_players:
+            for p_id, p_data in remote_players.items():
+                p_pos = pygame.Vector2(p_data.get('pos_x', 0), p_data.get('pos_y', 0))
+                dist = (p_pos - self._pos).length()
+                if dist < min_dist:
+                    min_dist = dist
+                    target_pos = p_pos
+
+        # 3. DI CHUYỂN VÀ TẤN CÔNG
+        direction = target_pos - self._pos + (16, 32)
+        distance = direction.length()
+
+        if distance > 0:
+            direction = direction.normalize()
+
+        # Nếu mục tiêu nằm trong tầm nhận biết (radius)
+        if distance <= self._radius:
+            # Di chuyển tới mục tiêu
+            self._pos += direction * self._speed * dt
             
-            #check attacking
+            # Kiểm tra tấn công Local Player (nếu ở gần)
             if self.did_hit(player):
                 player.apply_damage(WISP_DAMAGE, self._pos.x)
+            
+            # Ghi chú: Logic gây sát thương cho remote_player thường do Server xử lý 
+            # hoặc các máy khách tự tính toán để đảm bảo đồng bộ.
 
-            # move toward player
-            self._pos += direction * self._speed * dt
+        # 4. HIỆU ỨNG BAY LƠ LỬNG (GHOST DRIFT)
+        self._float_timer += dt
+        self._pos.y += math.sin(self._float_timer * 3) * 0.5
 
-            # floating movement (ghost drift)
-            self._float_timer += dt
-            self._pos.y += math.sin(self._float_timer * 3) * 0.5
+        # Cập nhật Rect
+        self._rect.center = (int(self._pos.x), int(self._pos.y))
 
-            # update rect
-            self._rect.center = (int(self._pos.x), int(self._pos.y))
-
-        # animate
+        # 5. CẬP NHẬT HOẠT ẢNH (ANIMATION)
         self._anim_timer += dt
         if self._anim_timer > 1 / self._anim_speed:
             self._anim_timer = 0
-            self._frame_index += 1
-            if self._frame_index >= len(self._frames):
-                if self._alive:
-                    self._frame_index = (self._frame_index) % len(self._frames)
-                    self._image = self._frames[self._frame_index]
-                else:
-                    self._died = True
-            else:
-                self._image = self._frames[self._frame_index]
+            self._frame_index = (self._frame_index + 1) % len(self._frames)
+            self._image = self._frames[self._frame_index]
 
     # -----------------------
     # DRAW
@@ -218,10 +238,11 @@ class Goblin:
     #----------------------
     #    UPDATE     !!!! KNIFE DAMAGE MAGIC NUMBER !!!!!
     #----------------------
-    def update(self, dt, player, knives):
-        """Update animation, position based on dt, attack if player_pos in range"""
+    def update(self, dt, player, knives, remote_players = None):
+        """Update animation, position based on dt, attack if any player in range"""
         self.update_hurtbox()
-        #hit check
+        
+        # 1. Logic nhận sát thương (Giữ nguyên gốc)
         if self._health > 0:
             if self.is_hit(knives):
                 self._hit = True
@@ -231,51 +252,57 @@ class Goblin:
                     self._frame_index = 0
                     self._image = self._frames[0]
 
-        player_rect = player._rect
-        # check hit player if attacking (hit box increase from frame 15 - 21 and then reduce)
+        # 2. XÁC ĐỊNH MỤC TIÊU (Mới: Quét tìm người gần nhất)
+        target_rect = player._rect
+        self_center = pygame.Vector2(self._rect.center)
+        min_dist = self_center.distance_to(target_rect.center)
+
+        if remote_players:
+            for p_id, p_data in remote_players.items():
+                # Giả lập rect cho remote player từ dữ liệu nhận được
+                p_rect = pygame.Rect(p_data.get('pos_x', 0), p_data.get('pos_y', 0), 32, 64)
+                dist = self_center.distance_to(p_rect.center)
+                if dist < min_dist:
+                    min_dist = dist
+                    target_rect = p_rect
+
+        # 3. Logic tấn công người chơi chính (Giữ nguyên gốc)
         if self._attack:
             if self.did_hit(player) and self._health > 0:
                 player.apply_damage(GOB_DAMAGE, self._pos.x)
 
+        # 4. AI LOGIC (Sửa lại hướng dựa trên target_rect đã chọn ở trên)
         if self._health > 0:
-            # sight seeing
-            seeing = self.ray_casting(player_rect)
+            seeing = self.ray_casting(target_rect)
             if seeing:
-                direction = pygame.Vector2(player_rect.center) - pygame.Vector2(self._rect.center)
+                direction = pygame.Vector2(target_rect.center) - self_center
                 dist = direction.length()
+                
+                # Cập nhật hướng nhìn chuẩn
+                self._dir = "right" if direction.x > 0 else "left"
+
                 if dist <= self._hit_range and not self._attack:
+                    # Bắt đầu trạng thái tấn công
                     self._attack = True
                     self._vel.x = 0
                     self._frame_index = 0
                     self._frames = self._animations["attack"]
                     self._anim_timer = 0
                     self._anim_speed = 15
-                    self._image = self._frames[0]
                 else:
-                    # if not in range then tryna follow la
-                    if self._attack and self._frame_index == len(self._frames) - 1:
-                        # done attack and no more in range then follow
-                        self._vel.x = (direction.x / abs(direction.x)) * 30
-                        self._dir = "right" if self._vel.x > 0 else "left"
+                    # Logic đuổi theo (Follow)
+                    if (self._attack and self._frame_index == len(self._frames) - 1) or not self._attack:
                         self._attack = False
+                        # Tính toán vận tốc dựa trên hướng mục tiêu
                         self._vel.x = 30 if self._dir == "right" else -30
-                        self._frame_index = 0
-                        self._frames = self._animations["run"]
-                        self._anim_timer = 0
-                        self._anim_speed = 8
-                        self._image = self._frames[0]
-                    elif not self._attack:
-                        # move
-                        self._vel.x = (direction.x / abs(direction.x)) * 30
-                        self._vel.x = 30 if self._dir == "right" else -30
-                        if self._frame_index != 0: # continue the movement if not idling
+                        
+                        if self._frames != self._animations["run"]:
                             self._frame_index = 0
                             self._frames = self._animations["run"]
                             self._anim_timer = 0
                             self._anim_speed = 8
-                            self._image = self._frames[0]
             else:
-                # no seeing then return to normal once the attack animation is done
+                # Không thấy ai thì quay lại đi tuần/chạy bình thường khi xong chiêu
                 if self._attack and self._frame_index == len(self._frames) - 1:
                     self.hitbox.width = 0
                     self._attack = False
@@ -284,12 +311,14 @@ class Goblin:
                     self._frames = self._animations["run"]
                     self._anim_timer = 0
                     self._anim_speed = 8
-                    self._image = self._frames[0]
 
-            # moving logic + animation
-            self._pos += self._vel * dt
-            if self._attack:
+            # Di chuyển (Sửa lỗi: Không di chuyển khi đang attack)
+            if not self._attack:
+                self._pos.x += self._vel.x * dt
+            else:
                 self._vel.x = 0
+
+        # 5. Cập nhật Animation (Giữ nguyên gốc)
         self._anim_timer += dt
         if self._anim_timer >= 1 / self._anim_speed:
             self._anim_timer = 0
@@ -298,9 +327,9 @@ class Goblin:
                 if self._health > 0:
                     self._frame_index %= len(self._frames)
                 else:
-                    self._frame_index
                     self._died = True
 
+        # 6. Hiệu ứng rung và hiển thị (Giữ nguyên gốc)
         if self._hit:
             self._shake_timer += dt
             if self._shake_timer >= 1 / self._shake_duration:
@@ -308,9 +337,9 @@ class Goblin:
                 self._hit = False
 
         if not self._died:
-            self._image = self._frames[self._frame_index]
-
-        self._rect.topleft = self._pos
+            self._image = self._frames[min(self._frame_index, len(self._frames)-1)]
+            # Quan trọng: Cập nhật Rect để vòng lặp sau ray_casting chính xác
+            self._rect.topleft = (int(self._pos.x), int(self._pos.y))
 
     def update_hurtbox(self):
         mask = pygame.mask.from_surface(self._image)
@@ -502,7 +531,7 @@ class Item:
         self._pos = pygame.Vector2(pos)
         self.name = name
 
-    def update(self, dt, player):
+    def update(self, dt, player, remote_players = None):
         if self._pop:
             self._pop_timer += dt
 
@@ -567,7 +596,7 @@ class Crystal:
                 item_type = random.choice(["hp_item", "mp_item"])
                 self._item = Item(loader, item_type, self._pos)
 
-    def update(self, dt, player, knives):
+    def update(self, dt, player, knives, remote_players = None):
         self.update_hurtbox()
         if not self._died:
             if self._alive and self.is_hit(knives):
@@ -600,7 +629,7 @@ class Crystal:
                 if self._shake_timer > 1 / self._shake_duration:
                     self._shake_timer = 0
                     self._hit = False
-        self._item.update(dt, player)
+        self._item.update(dt, player, remote_players)
 
     def update_hurtbox(self):
         mask = pygame.mask.from_surface(self._image)
