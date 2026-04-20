@@ -14,7 +14,7 @@ from build import *
 from concurrent.futures import ThreadPoolExecutor
 
 # Network support
-from network_manager import NetworkManager, LocalNetworkManager
+from network_manager import NetworkManager
 from network_protocol import EnemyStateData
 from network_utils import NetworkStatistics
 
@@ -87,7 +87,7 @@ class Game:
             if not self.net_manager.connected:
                 print("[GAME] ⚠️  Failed to connect to server - falling back to offline")
                 self.enable_multiplayer = False
-                self.net_manager = LocalNetworkManager()
+                # self.net_manager = LocalNetworkManager()
             else:
                 print("[GAME] ✅ Connected to multiplayer server!")
                 self.net_stats = NetworkStatistics()
@@ -572,9 +572,9 @@ class Game:
             
             # ===== DRAW REMOTE PLAYERS =====
             self._draw_remote_players(filtered)
-            if not self._using_local_world_sync():
-                self._draw_remote_enemies(filtered)
-            self._draw_remote_projectiles(filtered)
+            # if not self._using_local_world_sync():
+            #     self._draw_remote_enemies(filtered)
+            # self._draw_remote_projectiles(filtered)
             
             # ===== DRAW NETWORK STATUS =====
             self._draw_network_status(filtered)
@@ -939,9 +939,8 @@ class Game:
         active_ids = set(remote_projectiles.keys())
         self.enemy_projectiles = [
             projectile for projectile in self.enemy_projectiles
-            if getattr(projectile, "projectile_id", None) in active_ids
+            if getattr(projectile, "projectile_id", None) in active_ids and getattr(projectile, "alive", True)
         ]
-
     def _apply_synced_object_visual_state(self, obj, data):
         frame_index = data.get('frame_index', 0)
 

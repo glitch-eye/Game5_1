@@ -140,7 +140,7 @@ class NetworkServer:
 
             with self.state_lock:
                 self.game_state['enemies'].update(message.data.get('enemies', {}))
-                self.game_state['projectiles'].update(message.data.get('projectiles', {}))
+                self.game_state['projectiles']= message.data.get('projectiles', {}).copy()
                 self.game_state['shared'] = message.data.get('shared', self.game_state.get('shared', {}))
                 payload = {
                     'players': self.game_state['players'].copy(),

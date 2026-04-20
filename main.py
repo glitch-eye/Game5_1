@@ -12,7 +12,7 @@ def main():
     
     ENABLE_MULTIPLAYER = True
     SERVER_HOST = 'localhost'
-    SERVER_PORT = 5001
+    SERVER_PORT = 4001
     # create game
     game = Game(
         enable_multiplayer=ENABLE_MULTIPLAYER,

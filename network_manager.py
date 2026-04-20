@@ -390,12 +390,13 @@ class NetworkManager:
             for projectile_id, timestamp in self.remote_projectile_timestamps.items()
             if now - timestamp > 0.25
         ]
+        ret = self.remote_projectiles.copy()
 
         for projectile_id in stale_ids:
             self.remote_projectiles.pop(projectile_id, None)
             self.remote_projectile_timestamps.pop(projectile_id, None)
 
-        return self.remote_projectiles.copy()
+        return ret
 
     def get_remote_map_state(self):
         """Get last remote map state received"""
@@ -448,21 +449,21 @@ class NetworkManager:
         self.debug_mode = enabled
 
 
-class LocalNetworkManager(NetworkManager):
-    """Network manager for offline/single-player mode"""
+# class LocalNetworkManager(NetworkManager):
+#     """Network manager for offline/single-player mode"""
     
-    def __init__(self):
-        self.is_client = False
-        self.connected = False
-        self.network_enabled = False
-        self.remote_players = {}
-        self.remote_enemies = {}
-        self.remote_projectiles = {}
+#     def __init__(self):
+#         self.is_client = False
+#         self.connected = False
+#         self.network_enabled = False
+#         self.remote_players = {}
+#         self.remote_enemies = {}
+#         self.remote_projectiles = {}
     
-    def update(self, delta_time):
-        """No-op for offline mode"""
-        pass
+#     def update(self, delta_time):
+#         """No-op for offline mode"""
+#         pass
     
-    def is_multiplayer_enabled(self):
-        """Always false for offline mode"""
-        return False
+#     def is_multiplayer_enabled(self):
+#         """Always false for offline mode"""
+#         return False

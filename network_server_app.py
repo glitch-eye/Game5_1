@@ -16,7 +16,7 @@ def main():
     """Main entry point for server application"""
     parser = argparse.ArgumentParser(description='Game03 Network Server')
     parser.add_argument('--host', default='0.0.0.0', help='Server host (default: 0.0.0.0)')
-    parser.add_argument('--port', type=int, default=5001, help='Server port (default: 5001)')
+    parser.add_argument('--port', type=int, default=4001, help='Server port (default: 5001)')
     parser.add_argument('--max-players', type=int, default=4, help='Maximum players (default: 4)')
     parser.add_argument('--verbose', action='store_true', help='Verbose output')
     
