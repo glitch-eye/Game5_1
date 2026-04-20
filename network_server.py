@@ -35,6 +35,7 @@ class NetworkServer:
             'players': {},
             'enemies': {},
             'projectiles': {},
+            'enemy_particles': {},
             'shared': {},
             'map': {
                 'black': True,
@@ -140,12 +141,14 @@ class NetworkServer:
 
             with self.state_lock:
                 self.game_state['enemies'].update(message.data.get('enemies', {}))
-                self.game_state['projectiles'].update(message.data.get('projectiles', {}))
+                self.game_state['projectiles'] = message.data.get('projectiles', {}).copy()
+                self.game_state['enemy_particles'] = message.data.get('enemy_particles', {}).copy()
                 self.game_state['shared'] = message.data.get('shared', self.game_state.get('shared', {}))
                 payload = {
                     'players': self.game_state['players'].copy(),
                     'enemies': self.game_state['enemies'].copy(),
                     'projectiles': self.game_state['projectiles'].copy(),
+                    'enemy_particles': self.game_state['enemy_particles'].copy(),
                     'map': self.game_state['map'].copy(),
                     'shared': self.game_state['shared'].copy(),
                     'world_owner_id': world_owner_id,
@@ -263,6 +266,7 @@ class NetworkServer:
                 'players': self.game_state['players'].copy(),
                 'enemies': self.game_state['enemies'].copy(),
                 'projectiles': self.game_state['projectiles'].copy(),
+                'enemy_particles': self.game_state['enemy_particles'].copy(),
                 'map': self.game_state['map'].copy(),
                 'shared': self.game_state.get('shared', {}).copy() if isinstance(self.game_state.get('shared'), dict) else {},
                 'time': self.game_state['time'],

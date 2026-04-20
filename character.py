@@ -10,7 +10,7 @@ from build import *
 import random
 
 class Character:
-    def __init__(self, loader, game):
+    def __init__(self, loader, game, player_no = 1):
         #keyboard control
         self._keys = {
             "jump": K_SPACE,
@@ -26,6 +26,7 @@ class Character:
         self.game = game
         self.loader = loader
         self.map = None
+        self.player_no = player_no
 
         #stats
         self._pos = PLAYER_INIT_POS
@@ -79,38 +80,73 @@ class Character:
         self._coyoteTimer = 0
 
         # sprite
-        self.animations = {
-            "idle": loader.get_animation("player_idle"),
-            "jump": loader.get_animation("player_jump"),
-            "fall": loader.get_animation("player_fall"),
-            "double_jump": loader.get_animation("player_2ndjump"),
-            "glide": loader.get_animation("player_gliding"),
-            "run": loader.get_animation("player_run"),
-            "run_start": loader.get_animation("player_run_start"),
-            "run_stop": loader.get_animation("player_run_stop"),
-            "run_back": loader.get_animation("player_run_back"),
-            "crouch": loader.get_animation("player_down"),
-            "action1": loader.get_animation("player_action1"),
-            "action2": loader.get_animation("player_action2"),
-            "action3": loader.get_animation("player_action3"),
-            "action4": loader.get_animation("player_action4"),
-            "run_attack1": loader.get_animation("player_run_attack1"),
-            "run_attack2": loader.get_animation("player_run_attack2"),
-            "run_attack3": loader.get_animation("player_run_attack3"),
-            "run_attack4": loader.get_animation("player_run_attack4"),
-            "jump_attack": loader.get_animation("player_jump_attack"),
-            "up_shot": loader.get_animation("player_up_shot"),
-            "up_shot2": loader.get_animation("player_up_shot2"),
-            "up_shot_air": loader.get_animation("player_up_shot_air"),
-            "up_shot_run": loader.get_animation("player_up_shot_run"),
-            "under_attack": loader.get_animation("player_under_attack"),
-            "slide": loader.get_animation("player_sliding"),
-            "time_stop": trim_top(loader.get_animation("player_time_stop")),
-            "time_stop_air": loader.get_animation("player_time_stop_air"),
-            "player_damage": loader.get_animation("player_damage"),
-            "player_fall_down": loader.get_animation("player_fall_down"),
-            "player_des": loader.get_animation("player_des"),
-        }
+        if player_no == 1:
+            self.animations = {
+                "idle": loader.get_animation("player_idle"),
+                "jump": loader.get_animation("player_jump"),
+                "fall": loader.get_animation("player_fall"),
+                "double_jump": loader.get_animation("player_2ndjump"),
+                "glide": loader.get_animation("player_gliding"),
+                "run": loader.get_animation("player_run"),
+                "run_start": loader.get_animation("player_run_start"),
+                "run_stop": loader.get_animation("player_run_stop"),
+                "run_back": loader.get_animation("player_run_back"),
+                "crouch": loader.get_animation("player_down"),
+                "action1": loader.get_animation("player_action1"),
+                "action2": loader.get_animation("player_action2"),
+                "action3": loader.get_animation("player_action3"),
+                "action4": loader.get_animation("player_action4"),
+                "run_attack1": loader.get_animation("player_run_attack1"),
+                "run_attack2": loader.get_animation("player_run_attack2"),
+                "run_attack3": loader.get_animation("player_run_attack3"),
+                "run_attack4": loader.get_animation("player_run_attack4"),
+                "jump_attack": loader.get_animation("player_jump_attack"),
+                "up_shot": loader.get_animation("player_up_shot"),
+                "up_shot2": loader.get_animation("player_up_shot2"),
+                "up_shot_air": loader.get_animation("player_up_shot_air"),
+                "up_shot_run": loader.get_animation("player_up_shot_run"),
+                "under_attack": loader.get_animation("player_under_attack"),
+                "slide": loader.get_animation("player_sliding"),
+                "time_stop": trim_top(loader.get_animation("player_time_stop")),
+                "time_stop_air": loader.get_animation("player_time_stop_air"),
+                "player_damage": loader.get_animation("player_damage"),
+                "player_fall_down": loader.get_animation("player_fall_down"),
+                "player_des": loader.get_animation("player_des"),
+            }
+        else:
+            self.animations = {
+                "idle": loader.get_animation("player_idle_2"),
+                "jump": loader.get_animation("player_jump_2"),
+                "fall": loader.get_animation("player_fall_2"),
+                "double_jump": loader.get_animation("player_2ndjump_2"),
+                "glide": loader.get_animation("player_gliding_2"),
+                "run": loader.get_animation("player_run_2"),
+                "run_start": loader.get_animation("player_run_start_2"),
+                "run_stop": loader.get_animation("player_run_stop_2"),
+                "run_back": loader.get_animation("player_run_back_2"),
+                "crouch": loader.get_animation("player_down_2"),
+                "action1": loader.get_animation("player_action1_2"),
+                "action2": loader.get_animation("player_action2_2"),
+                "action3": loader.get_animation("player_action3_2"),
+                "action4": loader.get_animation("player_action4_2"),
+                "run_attack1": loader.get_animation("player_run_attack1_2"),
+                "run_attack2": loader.get_animation("player_run_attack2_2"),
+                "run_attack3": loader.get_animation("player_run_attack3_2"),
+                "run_attack4": loader.get_animation("player_run_attack4_2"),
+                "jump_attack": loader.get_animation("player_jump_attack_2"),
+                "up_shot": loader.get_animation("player_up_shot_2"),
+                "up_shot2": loader.get_animation("player_up_shot2_2"),
+                "up_shot_air": loader.get_animation("player_up_shot_air_2"),
+                "up_shot_run": loader.get_animation("player_up_shot_run_2"),
+                "under_attack": loader.get_animation("player_under_attack_2"),
+                "slide": loader.get_animation("player_sliding_2"),
+                "time_stop": trim_top(loader.get_animation("player_time_stop_2")),
+                "time_stop_air": loader.get_animation("player_time_stop_air_2"),
+                "player_damage": loader.get_animation("player_damage"),
+                "player_fall_down": loader.get_animation("player_fall_down"),
+                "player_des": loader.get_animation("player_des_2"),
+            }
+
 
         self.anim_speeds = {
             "run": 0.04,

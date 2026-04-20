@@ -106,7 +106,17 @@ class Game:
         self.loader.load_animation("pause_screen", "assets/sprite/title_back")
         self.loader.load_animation("status_font", "assets/sprite/status_font")
 
-        # player
+        # player effect (shared)
+        self.loader.load_animation("arrow_ring_sprite", "assets/sprite/arrow_ring_sprite")
+        self.loader.load_animation("player_jump_effect", "assets/sprite/player_jump_effect")
+        self.loader.load_animation("bullet_effect_sprite2", "assets/sprite/bullet_effect_sprite2")
+        self.loader.load_animation("bullet_effect_sprite3", "assets/sprite/bullet_effect_sprite3")
+        self.loader.load_animation("flying_knife", "assets/sprite/bullet_sprite3")
+
+        self.loader.load_animation("player_damage", "assets/sprite/player_damage")
+        self.loader.load_animation("player_fall_down", "assets/sprite/player_fall_down")
+
+        # player 1
         self.loader.load_animation("player_idle", "assets/sprite/player_stop")
         self.loader.load_animation("player_jump", "assets/sprite/player_jump")
         self.loader.load_animation("player_fall", "assets/sprite/player_falling")
@@ -117,10 +127,6 @@ class Game:
         self.loader.load_animation("player_run_stop", "assets/sprite/player_run_stop")
         self.loader.load_animation("player_run_back", "assets/sprite/player_run_back")
         self.loader.load_animation("player_down", "assets/sprite/player_down")
-        self.loader.load_animation("arrow_ring_sprite", "assets/sprite/arrow_ring_sprite")
-        self.loader.load_animation("player_jump_effect", "assets/sprite/player_jump_effect")
-        self.loader.load_animation("bullet_effect_sprite2", "assets/sprite/bullet_effect_sprite2")
-        self.loader.load_animation("bullet_effect_sprite3", "assets/sprite/bullet_effect_sprite3")
         self.loader.load_animation("player_action1", "assets/sprite/player_action")
         self.loader.load_animation("player_action2", "assets/sprite/player_action2")
         self.loader.load_animation("player_action3", "assets/sprite/player_action3")
@@ -138,10 +144,36 @@ class Game:
         self.loader.load_animation("player_sliding","assets/sprite/player_sliding")
         self.loader.load_animation("player_time_stop", "assets/sprite/player_time_stop")
         self.loader.load_animation("player_time_stop_air", "assets/sprite/player_time_stop_air")
-        self.loader.load_animation("flying_knife", "assets/sprite/bullet_sprite3")
-        self.loader.load_animation("player_damage", "assets/sprite/player_damage")
-        self.loader.load_animation("player_fall_down", "assets/sprite/player_fall_down")
         self.loader.load_animation("player_des", "assets/sprite/player_des")
+        # player 2
+        self.loader.load_animation("player_idle_2", "assets/sprite/player_stop_2")
+        self.loader.load_animation("player_jump_2", "assets/sprite/player_jump_2")
+        self.loader.load_animation("player_fall_2", "assets/sprite/player_falling_2")
+        self.loader.load_animation("player_2ndjump_2", "assets/sprite/player_2ndjump_2")
+        self.loader.load_animation("player_gliding_2", "assets/sprite/player_gliding_2")
+        self.loader.load_animation("player_run_2", "assets/sprite/player_run_2")
+        self.loader.load_animation("player_run_start_2", "assets/sprite/player_run_start_2")
+        self.loader.load_animation("player_run_stop_2", "assets/sprite/player_run_stop_2")
+        self.loader.load_animation("player_run_back_2", "assets/sprite/player_run_back_2")
+        self.loader.load_animation("player_down_2", "assets/sprite/player_down_2")
+        self.loader.load_animation("player_action1_2", "assets/sprite/player_action_2")
+        self.loader.load_animation("player_action2_2", "assets/sprite/player_action2_2")
+        self.loader.load_animation("player_action3_2", "assets/sprite/player_action3_2")
+        self.loader.load_animation("player_action4_2", "assets/sprite/player_action4_2")
+        self.loader.load_animation("player_run_attack1_2", "assets/sprite/player_run_attack2_2")
+        self.loader.load_animation("player_run_attack2_2", "assets/sprite/player_run_attack_2")
+        self.loader.load_animation("player_run_attack3_2", "assets/sprite/player_run_attack3_2")
+        self.loader.load_animation("player_run_attack4_2", "assets/sprite/player_run_attack4_2")
+        self.loader.load_animation("player_jump_attack_2", "assets/sprite/player_jump_attack_2")
+        self.loader.load_animation("player_up_shot_2","assets/sprite/player_up_shot_2")
+        self.loader.load_animation("player_up_shot2_2","assets/sprite/player_up_shot2_2")
+        self.loader.load_animation("player_up_shot_run_2","assets/sprite/player_up_shot_run_2")
+        self.loader.load_animation("player_up_shot_air_2","assets/sprite/player_up_shot_air_2")
+        self.loader.load_animation("player_under_attack_2","assets/sprite/player_under_attack_2")
+        self.loader.load_animation("player_sliding_2","assets/sprite/player_sliding_2")
+        self.loader.load_animation("player_time_stop_2", "assets/sprite/player_time_stop_2")
+        self.loader.load_animation("player_time_stop_air_2", "assets/sprite/player_time_stop_air_2")
+        self.loader.load_animation("player_des_2", "assets/sprite/player_des_2")
         # item and effect
         self.loader.load_animation("crystal", "assets/sprite/crystal_sprite")
         self.loader.load_animation("bomb_effect", "assets/sprite/bomb_effect")
@@ -234,26 +266,58 @@ class Game:
 
         self.crystal = list(self.executor.map(lambda x: Crystal(self.loader, x), CRYSTAL_POS))
 
-        # create entities AFTER assets exist
-        self.player = Character(self.loader, self)
+        # prepare remote render templates for player sprites
+        self.remote_player_templates = {
+            1: Character(self.loader, self, 1),
+            2: Character(self.loader, self, 2),
+        }
 
-        # Send initial player state once so server knows our spawn position
-        if self.enable_multiplayer and self.net_manager and self.net_manager.connected:
-            self.net_manager.send_player_state(self.player)
+        # prepare remote render templates for player sprites
+        self.remote_player_templates = {
+            1: Character(self.loader, self, 1),
+            2: Character(self.loader, self, 2),
+        }
 
-        # spawn boss
-        self.boss = Boss(self.loader, self, self.player)
-
-        # spawn fire gate
-        self.fire_gate = FireGate((3347.0, 470.0), self.loader)
-        self.magatamas = [Magatama((2850, 680), self.loader)]
+        # initialize entity placeholders; actual player/boss creation happens once the game starts
+        self.player = None
+        self.boss = None
+        self.fire_gate = None
+        self.magatamas = []
 
         self.BG = build_background()
         self.INDEX_MAP = load_map_from_excel()
         self.collision_map = Map()
         self.map_tiles, self.collision_tiles = self.collision_map.build_map()
-        self.player.set_map(self.collision_map)
         self.collision_map.build_collision(self.INDEX_MAP, self.collision_tiles)
+        self._last_sent_map_state = self._get_local_map_state()
+        self._create_local_entities()
+
+    def _create_local_entities(self, desired_player_no=None, force_recreate=False):
+        """Create or update the local player and dependent entities."""
+        if self.player is not None and not force_recreate:
+            if desired_player_no is None or getattr(self.player, 'player_no', 1) == desired_player_no:
+                return
+
+        player_no = 1
+        if desired_player_no is not None:
+            player_no = desired_player_no
+        elif self.enable_multiplayer and self.net_manager and self.net_manager.connected:
+            import time
+            start_time = time.time()
+            while self.net_manager.world_owner_id is None and time.time() - start_time < 1.0:
+                self.net_manager.update(0)
+                time.sleep(0.01)
+
+            player_no = 1 if self.net_manager.is_world_authority() else 2
+
+        self.player = Character(self.loader, self, player_no)
+        self.player.player_no = player_no
+        self.player.set_map(self.collision_map)
+
+        self.boss = Boss(self.loader, self, self.player)
+        self.fire_gate = FireGate((3347.0, 470.0), self.loader)
+        self.magatamas = [Magatama((2850, 680), self.loader)]
+
         self._assign_world_ids()
         self._last_sent_map_state = self._get_local_map_state()
 
@@ -269,6 +333,7 @@ class Game:
                 if option:
                     self.enable_multiplayer = self.menu.multi_mode
                     self._init_network()
+                    self._create_local_entities(force_recreate=True)
                     self.in_menu = False
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -358,6 +423,7 @@ class Game:
 
         if self.enable_multiplayer and self.net_manager:
             self._apply_remote_projectile_interactions()
+            self._apply_remote_enemy_particles_interactions(dt)
 
         if not self.time_stop:
             for knife in self.knives:
@@ -368,6 +434,7 @@ class Game:
         self._assign_projectile_ids(self.knives)
         if self._is_world_authority():
             self._assign_projectile_ids(self.enemy_projectiles)
+            self._assign_particle_ids(self.enemy_particles)
 
     # -----------------------
     # COLLISION
@@ -575,6 +642,7 @@ class Game:
             if not self._using_local_world_sync():
                 self._draw_remote_enemies(filtered)
             self._draw_remote_projectiles(filtered)
+            self._draw_remote_enemy_particles(filtered)
             
             # ===== DRAW NETWORK STATUS =====
             self._draw_network_status(filtered)
@@ -634,6 +702,9 @@ class Game:
             try:
                 if not enemy_data.get('alive', True) or enemy_data.get('dead', False):
                     continue
+                entity_type = enemy_data.get('entity_type', '')
+                if entity_type == 'boss':
+                    continue  # Boss is drawn separately
                 pos_x = enemy_data.get('pos_x', 0)
                 pos_y = enemy_data.get('pos_y', 0)
                 screen_x = int(pos_x - self.camera_x)
@@ -661,6 +732,69 @@ class Game:
                 if projectile_data.get('projectile_id') in self.consumed_remote_projectiles:
                     continue
                 self._draw_remote_projectile_sprite(screen, projectile_data)
+            except (KeyError, TypeError):
+                pass
+
+    def _draw_remote_enemy_particles(self, screen):
+        """Draw remote enemy particles on screen"""
+        if not self.enable_multiplayer or not self.net_manager:
+            return
+
+        remote_enemy_particles = self.net_manager.get_remote_enemy_particles()
+        if not remote_enemy_particles:
+            return
+
+        print(f"[DEBUG] Drawing remote enemy particles: {list(remote_enemy_particles.keys())}")
+
+        for particle_data in remote_enemy_particles.values():
+            try:
+                if not particle_data.get('alive', True):
+                    continue
+                
+                class_name = particle_data.get('class_name')
+                if class_name == "SmokeColumn":
+                    # Special drawing for SmokeColumn
+                    pos_x = particle_data.get('pos_x', 0)
+                    pos_y = particle_data.get('pos_y', 0)
+                    frame_index = particle_data.get('frame_index', 0)
+                    
+                    print(f"[DEBUG] Drawing SmokeColumn at {pos_x}, {pos_y}")
+                    
+                    frames = self.loader.get_animation("smoke")
+                    if not frames:
+                        continue
+                    
+                    # Tint frames red like local
+                    tinted_frames = [tint_surface_red(f) for f in frames]
+                    frame = tinted_frames[frame_index % len(tinted_frames)]
+                    h = frame.get_height()
+                    layers = 4  # Always 4 layers like local
+                    overlap = h * 0.45
+                    height = int(h + (layers - 1) * overlap)
+                    
+                    # Calculate bottom y from center y
+                    bottom_y = pos_y + height // 2
+                    
+                    for i in range(layers):
+                        # Fade higher layers slightly
+                        alpha = int(255 * (1 - i * 0.18))
+                        frame_copy = frame.copy()
+                        frame_copy.set_alpha(alpha)
+                        
+                        rect = frame_copy.get_rect(midbottom=(pos_x, bottom_y - i * overlap))
+                        screen.blit(frame_copy, rect.move(-self.camera_x, -self.camera_y))
+                else:
+                    # Draw enemy particles
+                    image = self._get_enemy_particles_visual(particle_data)
+                    if image is None:
+                        continue
+                    
+                    pos_x = particle_data.get('pos_x', 0)
+                    pos_y = particle_data.get('pos_y', 0)
+                    
+                    rect = image.get_rect(center=(int(pos_x), int(pos_y)))
+                    screen.blit(image, rect.move(-self.camera_x, -self.camera_y))
+                
             except (KeyError, TypeError):
                 pass
 
@@ -716,6 +850,17 @@ class Game:
                 projectile.projectile_id = f"{owner}_proj_{self.projectile_sequence}"
                 self.projectile_sequence += 1
 
+    def _assign_particle_ids(self, particles):
+        """Assign network IDs to particles (like projectiles)"""
+        owner = "offline"
+        if self.net_manager and getattr(self.net_manager, "client", None):
+            owner = self.net_manager.client.player_id or owner
+
+        for particle in particles:
+            if not hasattr(particle, "projectile_id"):
+                particle.projectile_id = f"{owner}_particle_{self.projectile_sequence}"
+                self.projectile_sequence += 1
+
     def _get_local_map_state(self):
         if not hasattr(self, "collision_map") or self.collision_map is None:
             return {'black': False, 'incoming_signal': False}
@@ -749,8 +894,10 @@ class Game:
         self._last_local_knife_ids = current_ids
 
     def _draw_remote_player_sprite(self, screen, player_data):
+        player_no = int(player_data.get('player_no', 1)) if player_data.get('player_no') is not None else 1
+        template = self.remote_player_templates.get(player_no, self.remote_player_templates[1])
         current_anim = player_data.get('current_anim', player_data.get('animation_state', 'idle'))
-        frames = self.player.animations.get(current_anim) or self.player.animations.get("idle")
+        frames = template.animations.get(current_anim) or template.animations.get("idle")
         if not frames:
             return
 
@@ -767,7 +914,7 @@ class Game:
         if current_anim in ("up_shot", "up_shot2", "up_shot_air", "up_shot_run"):
             draw_pos = (draw_pos[0], draw_pos[1] - 32)
 
-        offset = self.player.anim_offsets.get(current_anim, (0, 0))
+        offset = template.anim_offsets.get(current_anim, (0, 0))
         if isinstance(offset, dict):
             offset_x, offset_y = offset["right"] if facing_right else offset["left"]
         else:
@@ -785,8 +932,7 @@ class Game:
         class_name = projectile_data.get('class_name')
         if class_name == "MasterSparkProjectile":
             self._draw_remote_master_spark(screen, projectile_data)
-            return
-
+            return        
         image = self._get_projectile_visual(projectile_data)
         if image is None:
             return
@@ -870,6 +1016,9 @@ class Game:
         return self.enable_multiplayer and self.net_manager and not self._is_world_authority()
 
     def _sync_global_time_stop_from_network(self):
+        if self.player is None:
+            return
+
         if not self.enable_multiplayer or not self.net_manager:
             self.shared_time_stop_active = self.player.time_stop or self.player.time_stop_startup or self.player.time_stop_ending
             self.shared_time_stop_energy = self.player.time_energy
@@ -1081,6 +1230,23 @@ class Game:
             return frames[frame_index % len(frames)]
         return None
 
+    def _get_enemy_particles_visual(self, particle_data):
+        """Get visual representation for enemy particles"""
+        class_name = particle_data.get('class_name')
+        frame_index = particle_data.get('frame_index', 0)
+
+        if class_name == "DashTrail":
+            frames = self.loader.get_animation("marisa_after_effect_s")
+            return frames[frame_index % len(frames)]
+        if class_name == "ZangaiTrail":
+            frames = self.loader.get_animation("marisa_zangai")
+            return frames[frame_index % len(frames)]
+        if class_name == "SmokeColumn":
+            # SmokeColumn has special drawing logic, return single frame
+            frames = self.loader.get_animation("smoke")
+            return frames[frame_index % len(frames)]
+        return None
+
     def _build_remote_projectile_hitbox(self, projectile_data):
         class_name = projectile_data.get('class_name')
         image = self._get_projectile_visual(projectile_data)
@@ -1104,6 +1270,27 @@ class Game:
 
         rect = image.get_rect(center=(int(pos_x), int(pos_y)))
         return get_tight_hitbox(image, rect, "center")
+
+    def _build_remote_enemy_particles_hitbox(self, particle_data):
+        """Build hitbox for remote enemy particles"""
+        class_name = particle_data.get('class_name')
+        pos_x = particle_data.get('pos_x', 0)
+        pos_y = particle_data.get('pos_y', 0)
+
+        if class_name == "SmokeColumn":
+            # SmokeColumn has a rect covering the stacked column
+            frames = self.loader.get_animation("smoke")
+            if frames:
+                frame = frames[0]
+                h = frame.get_height()
+                layers = 4  # Always 4 layers
+                overlap = h * 0.45
+                height = int(h + (layers - 1) * overlap)
+                width = frame.get_width()
+                return pygame.Rect(int(pos_x - width//2), int(pos_y - height), width, height)
+        else:
+            pass
+        return None
 
     def _damage_synced_object_from_remote_knife(self, projectile_id, hitbox):
         if projectile_id in self.processed_remote_projectile_hits:
@@ -1161,7 +1348,7 @@ class Game:
         if self.boss and self.boss.visible and not self.boss._dead and not self.boss._dying:
             self.boss.update_hurtbox()
             if hitbox.colliderect(self.boss.hurtbox):
-                self.boss.take_damage(5)
+                self.boss.take_damage(15)
                 self.processed_remote_projectile_hits.add(projectile_id)
                 self.consumed_remote_projectiles.add(projectile_id)
                 return
@@ -1207,6 +1394,26 @@ class Game:
                     self.player.apply_damage(damage, hitbox.centerx)
                     if class_name in {"ShotProjectile", "UndershotProjectile"}:
                         self.consumed_remote_projectiles.add(projectile_id)
+
+    def _apply_remote_enemy_particles_interactions(self, dt):
+        """Apply interactions with remote enemy particles (e.g., smoke drains time energy)"""
+        if not self.enable_multiplayer or not self.net_manager:
+            return
+
+        player_hurtbox = self.player.get_hurtbox_rect()
+        remote_particles = self.net_manager.get_remote_enemy_particles()
+
+        for particle_id, particle_data in remote_particles.items():
+            if not particle_data.get('alive', True):
+                continue
+
+            class_name = particle_data.get('class_name')
+            if class_name == "SmokeColumn":
+                # SmokeColumn drains shared time energy when player is hit
+                hitbox = self._build_remote_enemy_particles_hitbox(particle_data)
+                if hitbox and hitbox.colliderect(player_hurtbox):
+                    self.shared_time_stop_energy -= 50 * dt
+                    self.player._inSmoke = True
 
     def _realign_synced_object(self, obj):
         if isinstance(obj, Wisp):
@@ -1273,6 +1480,7 @@ class Game:
                         self.net_manager.send_world_state(
                             self._get_shared_world_objects(),
                             self.knives + self.enemy_projectiles,
+                            self.enemy_particles,
                             self.collision_map,
                             {
                                 'time_stop_active': self.shared_time_stop_active,

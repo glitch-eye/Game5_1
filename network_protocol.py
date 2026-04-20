@@ -138,6 +138,7 @@ class PlayerStateData:
             'time_stop_wave_reverse': getattr(player, 'time_stop_wave_reverse', False),
             'frame_index': getattr(player, 'frame_index', 0),
             'dead': player._dead,
+            'player_no': getattr(player, 'player_no', 1),
         }
     
     @staticmethod
@@ -165,6 +166,8 @@ class PlayerStateData:
             player.time_stop_startup = data.get('time_stop_startup', player.time_stop_startup)
         if hasattr(player, 'time_stop_ending'):
             player.time_stop_ending = data.get('time_stop_ending', player.time_stop_ending)
+        if hasattr(player, 'player_no'):
+            player.player_no = data.get('player_no', player.player_no)
 
 
 class EnemyStateData:
@@ -215,6 +218,7 @@ class EnemyStateData:
             'frame_index': getattr(enemy, '_frame_index', getattr(enemy, 'frame_index', 0)),
             'attack': getattr(enemy, '_attack', False),
             'dir': getattr(enemy, '_dir', None),
+            'hit': getattr(enemy, '_hit', False),
         }
     
     @staticmethod
@@ -290,6 +294,9 @@ class EnemyStateData:
         if data.get('dir') is not None and hasattr(enemy, '_dir'):
             enemy._dir = data.get('dir')
 
+        if hasattr(enemy, '_hit'):
+            enemy._hit = data.get('hit', enemy._hit)
+
         item = getattr(enemy, '_item', None)
         if item is not None:
             if data.get('item_shown') is not None:
@@ -333,6 +340,42 @@ class ProjectileStateData:
             'ground_y': getattr(projectile, 'ground_y', None),
             'boss_x': getattr(getattr(projectile, 'boss', None), 'rect', None).centerx if getattr(getattr(projectile, 'boss', None), 'rect', None) else None,
             'boss_y': getattr(getattr(projectile, 'boss', None), 'rect', None).centery if getattr(getattr(projectile, 'boss', None), 'rect', None) else None,
+        }
+
+
+class ParticleStateData:
+    """Serializes particle state for network transmission"""
+
+    @staticmethod
+    def serialize(particle):
+        """Convert particle to network format"""
+        pos_x = None
+        pos_y = None
+        if hasattr(particle, 'pos'):
+            pos_x = float(particle.pos.x)
+            pos_y = float(particle.pos.y)
+        elif hasattr(particle, 'rect'):
+            pos_x = float(particle.rect.centerx)
+            pos_y = float(particle.rect.centery)
+
+        vel = getattr(particle, 'vel', getattr(particle, 'velocity', None))
+        vel_x = vel.x if vel is not None and hasattr(vel, 'x') else getattr(particle, 'vel_x', 0)
+        vel_y = vel.y if vel is not None and hasattr(vel, 'y') else getattr(particle, 'vel_y', 0)
+
+        return {
+            'particle_id': getattr(particle, 'particle_id', 'unknown'),
+            'class_name': particle.__class__.__name__,
+            'pos_x': pos_x or 0.0,
+            'pos_y': pos_y or 0.0,
+            'vel_x': float(vel_x),
+            'vel_y': float(vel_y),
+            'alive': getattr(particle, 'alive', True),
+            'facing_right': getattr(particle, 'facing_right', True),
+            'frame_index': getattr(particle, 'frame_index', getattr(particle, 'frame', 0)),
+            'state': getattr(particle, 'state', None),
+            'phase': getattr(particle, 'phase', None),
+            'ground_y': getattr(particle, 'ground_y', None),
+            'base_pos_y': getattr(particle, 'base_pos', None).y if hasattr(particle, 'base_pos') else None,
         }
 
 
