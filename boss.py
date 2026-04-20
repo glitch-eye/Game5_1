@@ -143,6 +143,7 @@ class Boss:
         # HP
         self.hp = 1000
         self.max_hp = 1000
+        self.prev_hp = self.hp
         self._dead = False
         # hurt flash system
         self._hit = False
@@ -287,6 +288,11 @@ class Boss:
             self.update_explosions(dt)
             return
 
+        # Detect HP decrease for remote damage flash
+        if self.hp < self.prev_hp:
+            self._hit = True
+            self._shake_timer = 0
+
         self.update_intro(dt)
         if self.state == "intro_done":
             self.update_pattern(dt)
@@ -353,6 +359,9 @@ class Boss:
             p.update(dt)
 
         self.dash_particles = [p for p in self.dash_particles if p.alive]
+
+        # Update prev_hp for damage detection
+        self.prev_hp = self.hp
 
     # -----------------------
     # DRAW
